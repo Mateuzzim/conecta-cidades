@@ -9,6 +9,15 @@ create extension if not exists pgcrypto;
 create extension if not exists unaccent;
 create extension if not exists pg_trgm;
 
+-- Wrapper IMMUTABLE do unaccent (exigido para índices em expressão)
+create or replace function public.immutable_unaccent(text)
+returns text
+language sql
+immutable
+parallel safe
+strict
+as $$ select public.unaccent($1); $$;
+
 -- ============================================================================
 -- 1. PROFILES
 -- ============================================================================
@@ -105,10 +114,10 @@ create index businesses_city_status_idx
   on public.businesses(city_id, status);
 
 create index businesses_name_trgm_idx
-  on public.businesses using gin (unaccent(name) gin_trgm_ops);
+  on public.businesses using gin (public.immutable_unaccent(name) gin_trgm_ops);
 
 create index businesses_description_trgm_idx
-  on public.businesses using gin (unaccent(description) gin_trgm_ops);
+  on public.businesses using gin (public.immutable_unaccent(description) gin_trgm_ops);
 
 -- ============================================================================
 -- 6. BUSINESS_CATEGORIES
