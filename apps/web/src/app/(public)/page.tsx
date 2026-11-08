@@ -1,46 +1,26 @@
 import Link from "next/link";
-import {
-  Utensils,
-  ShoppingCart,
-  HeartPulse,
-  Scissors,
-  Car,
-  Hammer,
-  Wrench,
-  GraduationCap,
-  Store,
-  Building2,
-  Truck,
-  MoreHorizontal,
-  ArrowRight,
-  MapPin,
-} from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
+import { getTopCategories } from "@/modules/categories/service";
+import { CategoryGrid } from "@/components/category/CategoryGrid";
+import { getCurrentCityCookie } from "@/lib/cookies";
+import { getActiveCities } from "@/modules/locations/service";
 
-const CATEGORIES = [
-  { name: "Alimentação", icon: Utensils },
-  { name: "Mercados", icon: ShoppingCart },
-  { name: "Saúde", icon: HeartPulse },
-  { name: "Beleza e Estética", icon: Scissors },
-  { name: "Automotivo", icon: Car },
-  { name: "Construção", icon: Hammer },
-  { name: "Serviços", icon: Wrench },
-  { name: "Educação", icon: GraduationCap },
-  { name: "Lojas e Comércio", icon: Store },
-  { name: "Serviços Públicos", icon: Building2 },
-  { name: "Transporte", icon: Truck },
-  { name: "Outros", icon: MoreHorizontal },
-];
+export default async function Home() {
+  const [categories, currentSlug, cities] = await Promise.all([
+    getTopCategories(),
+    getCurrentCityCookie(),
+    getActiveCities(),
+  ]);
 
-export default function Home() {
+  const citySlug = currentSlug ?? cities[0]?.slug ?? "nova-fatima";
+
   return (
     <>
       <section className="bg-gradient-to-b from-azul-50 to-white">
         <Container>
           <div className="flex flex-col items-start gap-6 py-16 md:py-24">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-azul-100 px-3 py-1 text-xs font-medium text-azul-700">
-              <MapPin className="size-3.5" aria-hidden />
               Nova Fátima · Pé de Serra · Riachão do Jacuípe
             </span>
             <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-azul-900 md:text-5xl">
@@ -58,7 +38,6 @@ export default function Home() {
               >
                 <Link href="/categorias">
                   Explorar categorias
-                  <ArrowRight className="ml-1 size-4" aria-hidden />
                 </Link>
               </Button>
               <Button
@@ -87,23 +66,7 @@ export default function Home() {
             </div>
           </div>
 
-          <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {CATEGORIES.map(({ name, icon: Icon }) => (
-              <li key={name}>
-                <Link
-                  href="/categorias"
-                  className="flex h-full flex-col items-center gap-2 rounded-xl border border-azul-100 bg-white p-4 text-center transition-colors hover:border-azul-300 hover:bg-azul-50"
-                >
-                  <span className="flex size-10 items-center justify-center rounded-full bg-azul-100 text-azul-600">
-                    <Icon className="size-5" aria-hidden />
-                  </span>
-                  <span className="text-sm font-medium text-azul-900">
-                    {name}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <CategoryGrid categories={categories} citySlug={citySlug} />
         </Container>
       </section>
 

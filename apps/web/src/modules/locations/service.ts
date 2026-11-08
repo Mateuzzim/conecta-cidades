@@ -7,7 +7,7 @@ type CityRow = {
   slug: string
   ibge_code: string
   active: boolean
-  state: { abbreviation: string; name: string }[]
+  state: { abbreviation: string; name: string } | { abbreviation: string; name: string }[] | null
 }
 
 export async function getActiveCities(): Promise<CityWithState[]> {
@@ -24,15 +24,16 @@ export async function getActiveCities(): Promise<CityWithState[]> {
   if (error) throw error
 
   return (data ?? []).map((c: CityRow) => {
-    const s = c.state[0]
+    const raw = c.state
+    const s = Array.isArray(raw) ? raw[0] : raw
     return {
       id: c.id,
       name: c.name,
       slug: c.slug,
       ibge_code: c.ibge_code,
       active: c.active,
-      state_abbreviation: s.abbreviation,
-      state_name: s.name,
+      state_abbreviation: s?.abbreviation ?? "",
+      state_name: s?.name ?? "",
     }
   })
 }
@@ -53,15 +54,16 @@ export async function getCityBySlug(slug: string): Promise<CityWithState | null>
   if (!data) return null
 
   const c = data as CityRow
-  const s = c.state[0]
+  const raw = c.state
+  const s = Array.isArray(raw) ? raw[0] : raw
   return {
     id: c.id,
     name: c.name,
     slug: c.slug,
     ibge_code: c.ibge_code,
     active: c.active,
-    state_abbreviation: s.abbreviation,
-    state_name: s.name,
+    state_abbreviation: s?.abbreviation ?? "",
+    state_name: s?.name ?? "",
   }
 }
 
@@ -80,14 +82,15 @@ export async function getCityById(id: string): Promise<CityWithState | null> {
   if (!data) return null
 
   const c = data as CityRow
-  const s = c.state[0]
+  const raw = c.state
+  const s = Array.isArray(raw) ? raw[0] : raw
   return {
     id: c.id,
     name: c.name,
     slug: c.slug,
     ibge_code: c.ibge_code,
     active: c.active,
-    state_abbreviation: s.abbreviation,
-    state_name: s.name,
+    state_abbreviation: s?.abbreviation ?? "",
+    state_name: s?.name ?? "",
   }
 }
