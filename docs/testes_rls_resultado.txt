@@ -1,0 +1,64 @@
+================================================================================
+RELATÓRIO — TESTES RLS (Instrução 04)
+Data: 2026-11-08
+Projeto Supabase: jfrlhmliqwgydkalbyih (conecta-cidades)
+Metodologia: API REST com anon key (SQL Editor roda como service_role e
+             ignora RLS; testes reais feitos via curl/HTTP)
+================================================================================
+
+PARTE A — DADOS DE TESTE (criados e removidos)
+--------------------------------------------------------------------------------
+- 2 usuários Auth criados via Admin API (dono-a/dono-b @test.local)
+  Obs: A.1 da instrução falharia sem auth.users — profiles.id tem FK
+  para auth.users; usuários reais criados antes dos profiles.
+- profiles: Dono A, Dono B (2)
+- businesses: negocio-pending (pending), negocio-approved (approved) (2)
+- leads: 1 whatsapp_click em negocio-approved
+
+PARTE B — TESTES COMO ANÔNIMO (Bearer = anon key)
+--------------------------------------------------------------------------------
+B.2  GET /businesses?slug=eq.negocio-approved     → HTTP 200, 1 row     ✓
+B.3  GET /businesses?slug=eq.negocio-pending      → HTTP 200, []        ✓
+B.4  GET /leads                                   → HTTP 200, []        ✓
+B.5  GET /audit_logs                              → HTTP 200, []        ✓
+B.6  GET /cities?active=eq.true                   → HTTP 200, 3 rows    ✓
+     (nova-fatima, pe-de-serra, riachao-do-jacuipe)
+
+Nota: primeira rodada de B.4/B.5 retornou PGRST205 (404) por erro de URL
+(& em vez de ?); com URL correta, tabela exposta e RLS devolve [].
+
+PARTE C — TESTES COMO DONO (login password grant)
+--------------------------------------------------------------------------------
+C.1  Login Dono A (dono-a@test.local)             → token OK             ✓
+     GET negocio-pending  (Bearer Dono A)         → 1 row (próprio)      ✓
+     GET negocio-approved (Bearer Dono A)         → 1 row                ✓
+
+     Login Dono B (dono-b@test.local)             → token OK             ✓
+     GET negocio-pending  (Bearer Dono B)         → [] (não vê de A)     ✓
+
+Não testado: política de UPDATE/DELETE por dono (fora do escopo mínimo
+da instrução); apenas leitura.
+
+PARTE D — LIMPEZA
+--------------------------------------------------------------------------------
+- leads: 0
+- businesses: 0
+- profiles: 0
+- usuários Auth dono-a/dono-b: removidos (DELETE admin 200)
+- arquivo de teste de storage (business-photos/test/hello.png): removido
+  na Instrução 03
+
+CHECKLIST "PRONTO"
+--------------------------------------------------------------------------------
+[x] Anônimo LÊ negócio approved ✓
+[x] Anônimo NÃO LÊ negócio pending ✓
+[x] Anônimo NÃO LÊ leads ✓
+[x] Anônimo NÃO LÊ audit_logs ✓
+[x] Anônimo LÊ cidades ativas ✓ (3)
+[x] Dono A LÊ próprio pending ✓  (Parte C executada)
+[x] Dono B NÃO LÊ pending de A ✓
+[x] Dados de teste removidos ao final
+[x] Relatório salvo em docs/testes_rls_resultado.txt
+
+STATUS: PRONTO — avançar para 05_DESIGN_TOKENS_E_LAYOUT.txt
+================================================================================
